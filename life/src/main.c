@@ -116,7 +116,6 @@ start:
                     new_cell->alive = cell->alive;
 
                     int live_neighbors = 0;
-                    int dead_neighbors = 0;
 
                     for (int dx = -1; dx <= 1; dx++)
                     {
@@ -155,10 +154,6 @@ start:
                             if (neighbor->alive)
                             {
                                 live_neighbors++;
-                            }
-                            else
-                            {
-                                dead_neighbors++;
                             }
                         }
                     }
