@@ -7,6 +7,7 @@
 #include <string.h>
 #include <time.h>
 
+#define TITLE "Predator & Prey"
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_Window *window = SDL_CreateWindow(
-        "Predator and Prey",
+        TITLE,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         WIDTH,
@@ -308,7 +309,7 @@ start:
         }
 
         char buffer[256];
-        sprintf(buffer, "Predator and Prey - Prey: %d, Predators: %d", num_prey, num_predators);
+        sprintf(buffer, "%s - Prey: %d, Predators: %d", TITLE, num_prey, num_predators);
         SDL_SetWindowTitle(window, buffer);
 
         SDL_UpdateTexture(

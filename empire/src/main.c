@@ -7,6 +7,7 @@
 #include <string.h>
 #include <time.h>
 
+#define TITLE "Empire"
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_Window *window = SDL_CreateWindow(
-        "Empire",
+        TITLE,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         WIDTH,

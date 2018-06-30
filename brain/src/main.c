@@ -7,6 +7,7 @@
 #include <string.h>
 #include <time.h>
 
+#define TITLE "Brian's Brain"
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -33,7 +34,7 @@ int main(int argc, char *argv[])
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_Window *window = SDL_CreateWindow(
-        "Brian's Brain",
+        TITLE,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         WIDTH,
@@ -138,6 +139,15 @@ start:
                     struct cell *new_cell = &new_cells[x + y * WIDTH];
 
                     new_cell->state = cell->state;
+                }
+            }
+
+            for (int x = 0; x < WIDTH; x++)
+            {
+                for (int y = 0; y < HEIGHT; y++)
+                {
+                    struct cell *cell = &cells[x + y * WIDTH];
+                    struct cell *new_cell = &new_cells[x + y * WIDTH];
 
                     int live_neighbors = 0;
 
@@ -220,6 +230,10 @@ start:
             free(new_cells);
         }
 
+        int num_live = 0;
+        int num_dead = 0;
+        int num_dying = 0;
+
         for (int x = 0; x < WIDTH; x++)
         {
             for (int y = 0; y < HEIGHT; y++)
@@ -239,6 +253,8 @@ start:
                     red = 255;
                     green = 255;
                     blue = 255;
+
+                    num_live++;
                 }
                 break;
                 case STATE_DEAD:
@@ -246,6 +262,8 @@ start:
                     red = 0;
                     green = 0;
                     blue = 0;
+
+                    num_dead++;
                 }
                 break;
                 case STATE_DYING:
@@ -253,6 +271,8 @@ start:
                     red = 0;
                     green = 0;
                     blue = 255;
+
+                    num_dying++;
                 }
                 break;
                 }
@@ -260,6 +280,10 @@ start:
                 *pixel = ((red & 0xff) << 24) | ((green & 0xff) << 16) | ((blue & 0xff) << 8) | ((alpha & 0xff) << 0);
             }
         }
+
+        char buffer[256];
+        sprintf(buffer, "%s - Live: %d, Dead: %d, Dying: %d", TITLE, num_live, num_dead, num_dying);
+        SDL_SetWindowTitle(window, buffer);
 
         SDL_UpdateTexture(
             texture,

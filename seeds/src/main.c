@@ -7,6 +7,7 @@
 #include <string.h>
 #include <time.h>
 
+#define TITLE "Seeds"
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_Window *window = SDL_CreateWindow(
-        "Seeds",
+        TITLE,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         WIDTH,
@@ -104,86 +105,96 @@ start:
 
         if (step)
         {
+            struct cell *new_cells = malloc(WIDTH * HEIGHT * sizeof(struct cell));
+
+            for (int x = 0; x < WIDTH; x++)
             {
-                struct cell *new_cells = malloc(WIDTH * HEIGHT * sizeof(struct cell));
-
-                for (int x = 0; x < WIDTH; x++)
+                for (int y = 0; y < HEIGHT; y++)
                 {
-                    for (int y = 0; y < HEIGHT; y++)
+                    struct cell *cell = &cells[x + y * WIDTH];
+                    struct cell *new_cell = &new_cells[x + y * WIDTH];
+
+                    new_cell->alive = cell->alive;
+                }
+            }
+
+            for (int x = 0; x < WIDTH; x++)
+            {
+                for (int y = 0; y < HEIGHT; y++)
+                {
+                    struct cell *cell = &cells[x + y * WIDTH];
+                    struct cell *new_cell = &new_cells[x + y * WIDTH];
+
+                    int live_neighbors = 0;
+
+                    for (int dx = -1; dx <= 1; dx++)
                     {
-                        struct cell *cell = &cells[x + y * WIDTH];
-                        struct cell *new_cell = &new_cells[x + y * WIDTH];
-
-                        new_cell->alive = cell->alive;
-
-                        int live_neighbors = 0;
-
-                        for (int dx = -1; dx <= 1; dx++)
+                        for (int dy = -1; dy <= 1; dy++)
                         {
-                            for (int dy = -1; dy <= 1; dy++)
+                            if (dx == 0 && dy == 0)
                             {
-                                if (dx == 0 && dy == 0)
-                                {
-                                    continue;
-                                }
+                                continue;
+                            }
 
-                                int nx = x + dx;
-                                int ny = y + dy;
+                            int nx = x + dx;
+                            int ny = y + dy;
 
-                                if (nx < 0)
-                                {
-                                    nx = WIDTH + nx;
-                                }
+                            if (nx < 0)
+                            {
+                                nx = WIDTH + nx;
+                            }
 
-                                if (nx >= WIDTH)
-                                {
-                                    nx = WIDTH - nx;
-                                }
+                            if (nx >= WIDTH)
+                            {
+                                nx = WIDTH - nx;
+                            }
 
-                                if (ny < 0)
-                                {
-                                    ny = HEIGHT + ny;
-                                }
+                            if (ny < 0)
+                            {
+                                ny = HEIGHT + ny;
+                            }
 
-                                if (ny >= HEIGHT)
-                                {
-                                    ny = HEIGHT - ny;
-                                }
+                            if (ny >= HEIGHT)
+                            {
+                                ny = HEIGHT - ny;
+                            }
 
-                                struct cell *neighbor = &cells[nx + ny * WIDTH];
+                            struct cell *neighbor = &cells[nx + ny * WIDTH];
 
-                                if (neighbor->alive)
-                                {
-                                    live_neighbors++;
-                                }
+                            if (neighbor->alive)
+                            {
+                                live_neighbors++;
                             }
                         }
-
-                        if (cell->alive)
-                        {
-                            new_cell->alive = false;
-                        }
-                        else if (live_neighbors == 2)
-                        {
-                            new_cell->alive = true;
-                        }
                     }
-                }
 
-                for (int x = 0; x < WIDTH; x++)
-                {
-                    for (int y = 0; y < HEIGHT; y++)
+                    if (cell->alive)
                     {
-                        struct cell *cell = &cells[x + y * WIDTH];
-                        struct cell *new_cell = &new_cells[x + y * WIDTH];
-
-                        cell->alive = new_cell->alive;
+                        new_cell->alive = false;
+                    }
+                    else if (live_neighbors == 2)
+                    {
+                        new_cell->alive = true;
                     }
                 }
-
-                free(new_cells);
             }
+
+            for (int x = 0; x < WIDTH; x++)
+            {
+                for (int y = 0; y < HEIGHT; y++)
+                {
+                    struct cell *cell = &cells[x + y * WIDTH];
+                    struct cell *new_cell = &new_cells[x + y * WIDTH];
+
+                    cell->alive = new_cell->alive;
+                }
+            }
+
+            free(new_cells);
         }
+
+        int num_live = 0;
+        int num_dead = 0;
 
         for (int x = 0; x < WIDTH; x++)
         {
@@ -202,17 +213,25 @@ start:
                     red = 255;
                     green = 255;
                     blue = 255;
+
+                    num_live++;
                 }
                 else
                 {
                     red = 0;
                     green = 0;
                     blue = 0;
+
+                    num_dead++;
                 }
 
                 *pixel = ((red & 0xff) << 24) | ((green & 0xff) << 16) | ((blue & 0xff) << 8) | ((alpha & 0xff) << 0);
             }
         }
+
+        char buffer[256];
+        sprintf(buffer, "%s - Live: %d, Dead: %d", TITLE, num_live, num_dead);
+        SDL_SetWindowTitle(window, buffer);
 
         SDL_UpdateTexture(
             texture,
