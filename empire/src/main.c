@@ -16,7 +16,18 @@
 
 struct cell
 {
+    int age;
+    int strength;
+    int reproduction_value;
     bool alive;
+    int colony_index;
+};
+
+struct colony
+{
+    unsigned char red;
+    unsigned char green;
+    unsigned char blue;
 };
 
 int main(int argc, char *argv[])
@@ -51,6 +62,14 @@ int main(int argc, char *argv[])
     bool step = true;
 
     struct cell *cells = malloc(WIDTH * HEIGHT * sizeof(struct cell));
+    struct colony colonies[] = {
+        {255, 0, 0},
+        {0, 255, 0},
+        {0, 0, 255},
+        {255, 255, 0},
+        {0, 255, 255},
+        {255, 0, 255},
+        {255, 255, 255}};
 
 start:
     for (int x = 0; x < WIDTH; x++)
@@ -59,7 +78,11 @@ start:
         {
             struct cell *cell = &cells[x + y * WIDTH];
 
-            cell->alive = rand() % 2 == 0;
+            cell->age = 0;
+            cell->strength = rand() % 100;
+            cell->reproduction_value = 0;
+            cell->alive = rand() % 100000 == 0;
+            cell->colony_index = rand() % (sizeof(colonies) / sizeof(struct colony));
         }
     }
 
@@ -105,6 +128,145 @@ start:
 
         if (step)
         {
+            for (int x = 0; x < WIDTH; x++)
+            {
+                for (int y = 0; y < HEIGHT; y++)
+                {
+                    struct cell *cell = &cells[x + y * WIDTH];
+
+                    if (cell->alive)
+                    {
+                        cell->age++;
+
+                        if (cell->age > cell->strength)
+                        {
+                            cell->alive = false;
+
+                            continue;
+                        }
+
+                        int dx = 0;
+                        int dy = 0;
+
+                        switch (rand() % 8)
+                        {
+                        case 0:
+                            dy = -1;
+                            break;
+                        case 1:
+                            dx = 1;
+                            dy = -1;
+                            break;
+                        case 2:
+                            dx = 1;
+                            break;
+                        case 3:
+                            dx = 1;
+                            dy = 1;
+                            break;
+                        case 4:
+                            dy = 1;
+                            break;
+                        case 5:
+                            dx = -1;
+                            dy = 1;
+                            break;
+                        case 6:
+                            dx = -1;
+                            break;
+                        case 7:
+                            dx = -1;
+                            dy = -1;
+                            break;
+                        }
+
+                        int nx = x + dx;
+                        int ny = y + dy;
+
+                        if (nx < 0)
+                        {
+                            nx = WIDTH + nx;
+                        }
+
+                        if (nx >= WIDTH)
+                        {
+                            nx = WIDTH - nx;
+                        }
+
+                        if (ny < 0)
+                        {
+                            ny = HEIGHT + ny;
+                        }
+
+                        if (ny >= HEIGHT)
+                        {
+                            ny = HEIGHT - ny;
+                        }
+
+                        struct cell *neighbor = &cells[nx + ny * WIDTH];
+
+                        cell->reproduction_value++;
+
+                        if (neighbor->alive)
+                        {
+                            if (neighbor->colony_index != cell->colony_index)
+                            {
+                                if (neighbor->strength >= cell->strength)
+                                {
+                                    cell->alive = false;
+                                }
+                                else
+                                {
+                                    neighbor->alive = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (cell->reproduction_value > cell->strength / 10)
+                            {
+                                cell->reproduction_value = 0;
+                                neighbor->age = 0;
+                                neighbor->strength = cell->strength;
+                                neighbor->reproduction_value = 0;
+                                neighbor->alive = true;
+                                neighbor->colony_index = cell->colony_index;
+
+                                if (rand() % 100 == 0)
+                                {
+                                    neighbor->strength /= 2;
+                                }
+                            }
+                            else
+                            {
+                                neighbor->age = cell->age;
+                                neighbor->strength = cell->strength;
+                                neighbor->reproduction_value = cell->reproduction_value;
+                                neighbor->alive = cell->alive;
+                                neighbor->colony_index = cell->colony_index;
+                                cell->age = 0;
+                                cell->strength = 0;
+                                cell->reproduction_value = 0;
+                                cell->alive = false;
+                                cell->colony_index = 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (rand() % 100 == 0)
+            {
+                int x = rand() % WIDTH;
+                int y = rand() % HEIGHT;
+                struct cell *cell = &cells[x + y * WIDTH];
+
+                cell->age = 0;
+                cell->strength = rand() % 100;
+                cell->reproduction_value = 0;
+                cell->alive = true;
+                cell->colony_index = rand() % (sizeof(colonies) / sizeof(struct colony));
+            }
         }
 
         for (int x = 0; x < WIDTH; x++)
@@ -121,9 +283,11 @@ start:
 
                 if (cell->alive)
                 {
-                    red = 255;
-                    green = 255;
-                    blue = 255;
+                    struct colony *colony = &colonies[cell->colony_index];
+
+                    red = colony->red;
+                    green = colony->green;
+                    blue = colony->blue;
                 }
                 else
                 {
