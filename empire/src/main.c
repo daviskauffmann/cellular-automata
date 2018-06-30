@@ -14,17 +14,22 @@
 #define FPS_CAP 30
 #define FRAME_DELAY (1000 / FPS_CAP)
 
+#define MAX_STRENGTH 100
+#define REPRODUCTION_THRESHOLD 20
+
 struct cell
 {
     int age;
     int strength;
     int reproduction_value;
     bool alive;
+    bool diseased;
     int colony_index;
 };
 
 struct colony
 {
+    const char *name;
     unsigned char red;
     unsigned char green;
     unsigned char blue;
@@ -63,13 +68,13 @@ int main(int argc, char *argv[])
 
     struct cell *cells = malloc(WIDTH * HEIGHT * sizeof(struct cell));
     struct colony colonies[] = {
-        {255, 0, 0},
-        {0, 255, 0},
-        {0, 0, 255},
-        {255, 255, 0},
-        {0, 255, 255},
-        {255, 0, 255},
-        {255, 255, 255}};
+        {"Red", 255, 0, 0},
+        {"Green", 0, 255, 0},
+        {"Blue", 0, 0, 255},
+        {"Yellow", 255, 255, 0},
+        {"Cyan", 0, 255, 255},
+        {"Magenta", 255, 0, 255},
+        {"White", 255, 255, 255}};
 
 start:
     for (int x = 0; x < WIDTH; x++)
@@ -79,9 +84,10 @@ start:
             struct cell *cell = &cells[x + y * WIDTH];
 
             cell->age = 0;
-            cell->strength = rand() % 100;
+            cell->strength = rand() % MAX_STRENGTH;
             cell->reproduction_value = 0;
             cell->alive = rand() % 100000 == 0;
+            cell->diseased = false;
             cell->colony_index = rand() % (sizeof(colonies) / sizeof(struct colony));
         }
     }
@@ -110,6 +116,39 @@ start:
                     step = !step;
                 }
                 break;
+                case SDLK_p:
+                {
+                    for (int i = 0; i < sizeof(colonies) / sizeof(struct colony); i++)
+                    {
+                        struct colony *colony = &colonies[i];
+
+                        int total = 0;
+                        int average_strength = 0;
+
+                        for (int x = 0; x < WIDTH; x++)
+                        {
+                            for (int y = 0; y < HEIGHT; y++)
+                            {
+                                struct cell *cell = &cells[x + y * WIDTH];
+
+                                if (cell->alive && cell->colony_index == i)
+                                {
+                                    total++;
+                                    average_strength += cell->strength;
+                                }
+                            }
+                        }
+
+                        if (total > 0)
+                        {
+                            average_strength /= total;
+                        }
+
+                        printf("%s\tTotal: %d\tAvg Str:%d\n", colony->name, total, average_strength);
+                    }
+                    printf("---\n");
+                }
+                break;
                 case SDLK_r:
                 {
                     goto start;
@@ -136,7 +175,7 @@ start:
 
                     if (cell->alive)
                     {
-                        cell->age++;
+                        cell->age += cell->diseased ? 2 : 1;
 
                         if (cell->age > cell->strength)
                         {
@@ -209,7 +248,14 @@ start:
 
                         if (neighbor->alive)
                         {
-                            if (neighbor->colony_index != cell->colony_index)
+                            if (neighbor->colony_index == cell->colony_index)
+                            {
+                                if (neighbor->diseased)
+                                {
+                                    cell->diseased = rand() % 2 == 0;
+                                }
+                            }
+                            else
                             {
                                 if (neighbor->strength >= cell->strength)
                                 {
@@ -223,18 +269,24 @@ start:
                         }
                         else
                         {
-                            if (cell->reproduction_value > cell->strength / 10)
+                            if (cell->reproduction_value > REPRODUCTION_THRESHOLD)
                             {
                                 cell->reproduction_value = 0;
                                 neighbor->age = 0;
                                 neighbor->strength = cell->strength;
                                 neighbor->reproduction_value = 0;
                                 neighbor->alive = true;
+                                neighbor->diseased = cell->diseased ? rand() % 2 == 0 : false;
                                 neighbor->colony_index = cell->colony_index;
 
                                 if (rand() % 100 == 0)
                                 {
-                                    neighbor->strength /= 2;
+                                    neighbor->strength *= (rand() % 200) / 100;
+                                }
+
+                                if (rand() % 1000 == 0)
+                                {
+                                    neighbor->diseased = true;
                                 }
                             }
                             else
@@ -243,29 +295,18 @@ start:
                                 neighbor->strength = cell->strength;
                                 neighbor->reproduction_value = cell->reproduction_value;
                                 neighbor->alive = cell->alive;
+                                neighbor->diseased = cell->diseased;
                                 neighbor->colony_index = cell->colony_index;
                                 cell->age = 0;
                                 cell->strength = 0;
                                 cell->reproduction_value = 0;
                                 cell->alive = false;
+                                cell->diseased = false;
                                 cell->colony_index = 0;
                             }
                         }
                     }
                 }
-            }
-
-            if (rand() % 100 == 0)
-            {
-                int x = rand() % WIDTH;
-                int y = rand() % HEIGHT;
-                struct cell *cell = &cells[x + y * WIDTH];
-
-                cell->age = 0;
-                cell->strength = rand() % 100;
-                cell->reproduction_value = 0;
-                cell->alive = true;
-                cell->colony_index = rand() % (sizeof(colonies) / sizeof(struct colony));
             }
         }
 
@@ -295,6 +336,13 @@ start:
                     green = 0;
                     blue = 0;
                 }
+
+                // if (cell->diseased)
+                // {
+                //     red /= 2;
+                //     green /= 2;
+                //     blue /= 2;
+                // }
 
                 *pixel = ((red & 0xff) << 24) | ((green & 0xff) << 16) | ((blue & 0xff) << 8) | ((alpha & 0xff) << 0);
             }
