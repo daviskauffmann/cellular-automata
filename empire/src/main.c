@@ -14,16 +14,18 @@
 #define FPS_CAP 30
 #define FRAME_DELAY (1000 / FPS_CAP)
 
-#define MAX_STRENGTH 100
-#define REPRODUCTION_THRESHOLD 20
+#define STEP_COUNT 1
+
+#define LIFESPAN 100
+#define REPRODUCTION_THRESHOLD 1
+#define MUTATION_PERCENT 1
 
 struct cell
 {
     int age;
-    int strength;
     int reproduction_value;
+    float strength;
     bool alive;
-    bool diseased;
     int colony_index;
 };
 
@@ -65,31 +67,32 @@ int main(int argc, char *argv[])
     srand((unsigned int)time(NULL));
 
     bool step = true;
+    int step_counter = STEP_COUNT;
 
     struct cell *cells = malloc(WIDTH * HEIGHT * sizeof(struct cell));
     struct colony colonies[] = {
         {"Red", 255, 0, 0},
+        {"Orange", 255, 127, 0},
+        {"Yellow", 255, 255, 0},
         {"Green", 0, 255, 0},
         {"Blue", 0, 0, 255},
-        {"Yellow", 255, 255, 0},
+        {"Violet", 139, 0, 255},
         {"Cyan", 0, 255, 255},
         {"Magenta", 255, 0, 255},
         {"White", 255, 255, 255}};
 
 start:
-    for (int x = 0; x < WIDTH; x++)
-    {
-        for (int y = 0; y < HEIGHT; y++)
-        {
-            struct cell *cell = &cells[x + y * WIDTH];
+    memset(cells, 0, WIDTH * HEIGHT * sizeof(struct cell));
 
-            cell->age = 0;
-            cell->strength = rand() % MAX_STRENGTH;
-            cell->reproduction_value = 0;
-            cell->alive = rand() % 100000 == 0;
-            cell->diseased = false;
-            cell->colony_index = rand() % (sizeof(colonies) / sizeof(struct colony));
-        }
+    for (int i = 0; i < sizeof(colonies) / sizeof(struct colony); i++)
+    {
+        int x = rand() % WIDTH;
+        int y = rand() % HEIGHT;
+        struct cell *cell = &cells[x + y * WIDTH];
+
+        cell->strength = (float)rand();
+        cell->alive = true;
+        cell->colony_index = i;
     }
 
     bool running = true;
@@ -118,12 +121,15 @@ start:
                 break;
                 case SDLK_p:
                 {
+                    printf("---\n");
+
                     for (int i = 0; i < sizeof(colonies) / sizeof(struct colony); i++)
                     {
                         struct colony *colony = &colonies[i];
 
                         int total = 0;
-                        int average_strength = 0;
+                        float average_age = 0;
+                        float average_strength = 0;
 
                         for (int x = 0; x < WIDTH; x++)
                         {
@@ -134,6 +140,7 @@ start:
                                 if (cell->alive && cell->colony_index == i)
                                 {
                                     total++;
+                                    average_age += cell->age;
                                     average_strength += cell->strength;
                                 }
                             }
@@ -141,11 +148,18 @@ start:
 
                         if (total > 0)
                         {
+                            average_age /= total;
                             average_strength /= total;
                         }
 
-                        printf("%s\tTotal: %d\tAvg Str:%d\n", colony->name, total, average_strength);
+                        printf(
+                            "%s\tTotal: %d\tAvg Age: %f\tAvg Str:%f\n",
+                            colony->name,
+                            total,
+                            average_age,
+                            average_strength);
                     }
+
                     printf("---\n");
                 }
                 break;
@@ -167,147 +181,148 @@ start:
 
         if (step)
         {
-            for (int x = 0; x < WIDTH; x++)
+            while (step_counter)
             {
-                for (int y = 0; y < HEIGHT; y++)
+                step_counter--;
+
+                for (int x = 0; x < WIDTH; x++)
                 {
-                    struct cell *cell = &cells[x + y * WIDTH];
-
-                    if (cell->alive)
+                    for (int y = 0; y < HEIGHT; y++)
                     {
-                        cell->age += cell->diseased ? 2 : 1;
+                        struct cell *cell = &cells[x + y * WIDTH];
 
-                        if (cell->age > cell->strength)
+                        if (cell->alive)
                         {
-                            cell->alive = false;
+                            cell->age += (int)ceilf(cell->strength / (float)RAND_MAX);
+                            cell->reproduction_value++;
 
-                            continue;
-                        }
-
-                        int dx = 0;
-                        int dy = 0;
-
-                        switch (rand() % 8)
-                        {
-                        case 0:
-                            dy = -1;
-                            break;
-                        case 1:
-                            dx = 1;
-                            dy = -1;
-                            break;
-                        case 2:
-                            dx = 1;
-                            break;
-                        case 3:
-                            dx = 1;
-                            dy = 1;
-                            break;
-                        case 4:
-                            dy = 1;
-                            break;
-                        case 5:
-                            dx = -1;
-                            dy = 1;
-                            break;
-                        case 6:
-                            dx = -1;
-                            break;
-                        case 7:
-                            dx = -1;
-                            dy = -1;
-                            break;
-                        }
-
-                        int nx = x + dx;
-                        int ny = y + dy;
-
-                        if (nx < 0)
-                        {
-                            nx = WIDTH + nx;
-                        }
-
-                        if (nx >= WIDTH)
-                        {
-                            nx = WIDTH - nx;
-                        }
-
-                        if (ny < 0)
-                        {
-                            ny = HEIGHT + ny;
-                        }
-
-                        if (ny >= HEIGHT)
-                        {
-                            ny = HEIGHT - ny;
-                        }
-
-                        struct cell *neighbor = &cells[nx + ny * WIDTH];
-
-                        cell->reproduction_value++;
-
-                        if (neighbor->alive)
-                        {
-                            if (neighbor->colony_index == cell->colony_index)
+                            if (cell->age > LIFESPAN)
                             {
-                                if (neighbor->diseased)
+                                cell->alive = false;
+
+                                continue;
+                            }
+
+                            int dx = 0;
+                            int dy = 0;
+
+                            switch (rand() % 8)
+                            {
+                            case 0:
+                                dy = -1;
+                                break;
+                            case 1:
+                                dx = 1;
+                                dy = -1;
+                                break;
+                            case 2:
+                                dx = 1;
+                                break;
+                            case 3:
+                                dx = 1;
+                                dy = 1;
+                                break;
+                            case 4:
+                                dy = 1;
+                                break;
+                            case 5:
+                                dx = -1;
+                                dy = 1;
+                                break;
+                            case 6:
+                                dx = -1;
+                                break;
+                            case 7:
+                                dx = -1;
+                                dy = -1;
+                                break;
+                            }
+
+                            int nx = x + dx;
+                            int ny = y + dy;
+
+                            if (nx < 0)
+                            {
+                                nx = WIDTH + nx;
+                            }
+
+                            if (nx >= WIDTH)
+                            {
+                                nx = WIDTH - nx;
+                            }
+
+                            if (ny < 0)
+                            {
+                                ny = HEIGHT + ny;
+                            }
+
+                            if (ny >= HEIGHT)
+                            {
+                                ny = HEIGHT - ny;
+                            }
+
+                            struct cell *neighbor = &cells[nx + ny * WIDTH];
+
+                            if (neighbor->alive)
+                            {
+                                if (neighbor->colony_index != cell->colony_index)
                                 {
-                                    cell->diseased = rand() % 2 == 0;
+                                    if (rand() % (int)(neighbor->strength + 1) >= rand() % (int)(cell->strength + 1))
+                                    {
+                                        cell->alive = false;
+                                        neighbor->strength += cell->strength;
+                                        if (neighbor->strength > RAND_MAX)
+                                        {
+                                            neighbor->strength = RAND_MAX;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        neighbor->alive = false;
+                                        cell->strength += neighbor->strength;
+                                        if (cell->strength > RAND_MAX)
+                                        {
+                                            cell->strength = RAND_MAX;
+                                        }
+                                    }
                                 }
                             }
                             else
                             {
-                                if (neighbor->strength >= cell->strength)
+                                if (cell->reproduction_value > REPRODUCTION_THRESHOLD)
                                 {
-                                    cell->alive = false;
+                                    cell->reproduction_value = 0;
+                                    neighbor->age = 0;
+                                    neighbor->strength = cell->strength;
+                                    neighbor->reproduction_value = 0;
+                                    neighbor->alive = true;
+                                    neighbor->colony_index = cell->colony_index;
+
+                                    if (rand() % 100 < MUTATION_PERCENT)
+                                    {
+                                        neighbor->strength *= (float)rand() / (float)RAND_MAX;
+                                    }
                                 }
                                 else
                                 {
-                                    neighbor->alive = false;
+                                    neighbor->age = cell->age;
+                                    neighbor->strength = cell->strength;
+                                    neighbor->reproduction_value = cell->reproduction_value;
+                                    neighbor->alive = cell->alive;
+                                    neighbor->colony_index = cell->colony_index;
+                                    cell->age = 0;
+                                    cell->strength = 0;
+                                    cell->reproduction_value = 0;
+                                    cell->alive = false;
+                                    cell->colony_index = 0;
                                 }
-                            }
-                        }
-                        else
-                        {
-                            if (cell->reproduction_value > REPRODUCTION_THRESHOLD)
-                            {
-                                cell->reproduction_value = 0;
-                                neighbor->age = 0;
-                                neighbor->strength = cell->strength;
-                                neighbor->reproduction_value = 0;
-                                neighbor->alive = true;
-                                neighbor->diseased = cell->diseased ? rand() % 2 == 0 : false;
-                                neighbor->colony_index = cell->colony_index;
-
-                                if (rand() % 100 == 0)
-                                {
-                                    neighbor->strength *= (rand() % 200) / 100;
-                                }
-
-                                if (rand() % 1000 == 0)
-                                {
-                                    neighbor->diseased = true;
-                                }
-                            }
-                            else
-                            {
-                                neighbor->age = cell->age;
-                                neighbor->strength = cell->strength;
-                                neighbor->reproduction_value = cell->reproduction_value;
-                                neighbor->alive = cell->alive;
-                                neighbor->diseased = cell->diseased;
-                                neighbor->colony_index = cell->colony_index;
-                                cell->age = 0;
-                                cell->strength = 0;
-                                cell->reproduction_value = 0;
-                                cell->alive = false;
-                                cell->diseased = false;
-                                cell->colony_index = 0;
                             }
                         }
                     }
                 }
             }
+
+            step_counter = STEP_COUNT;
         }
 
         for (int x = 0; x < WIDTH; x++)
@@ -326,9 +341,9 @@ start:
                 {
                     struct colony *colony = &colonies[cell->colony_index];
 
-                    red = colony->red;
-                    green = colony->green;
-                    blue = colony->blue;
+                    red = (int)((float)colony->red * (cell->strength / (float)RAND_MAX));
+                    green = (int)((float)colony->green * (cell->strength / (float)RAND_MAX));
+                    blue = (int)((float)colony->blue * (cell->strength / (float)RAND_MAX));
                 }
                 else
                 {
@@ -336,13 +351,6 @@ start:
                     green = 0;
                     blue = 0;
                 }
-
-                // if (cell->diseased)
-                // {
-                //     red /= 2;
-                //     green /= 2;
-                //     blue /= 2;
-                // }
 
                 *pixel = ((red & 0xff) << 24) | ((green & 0xff) << 16) | ((blue & 0xff) << 8) | ((alpha & 0xff) << 0);
             }
