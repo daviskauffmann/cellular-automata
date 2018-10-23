@@ -309,7 +309,7 @@ start:
         }
 
         char buffer[256];
-        sprintf(buffer, "%s - Prey: %d, Predators: %d", TITLE, num_prey, num_predators);
+        sprintf_s(buffer, sizeof(buffer), "%s - Prey: %d, Predators: %d", TITLE, num_prey, num_predators);
         SDL_SetWindowTitle(window, buffer);
 
         SDL_UpdateTexture(

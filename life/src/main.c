@@ -230,7 +230,7 @@ start:
         }
 
         char buffer[256];
-        sprintf(buffer, "%s - Live: %d, Dead: %d", TITLE, num_live, num_dead);
+        sprintf_s(buffer, sizeof(buffer), "%s - Live: %d, Dead: %d", TITLE, num_live, num_dead);
         SDL_SetWindowTitle(window, buffer);
 
         SDL_UpdateTexture(
