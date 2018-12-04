@@ -7,10 +7,11 @@
 #include <string.h>
 #include <time.h>
 
-#define WIDTH 800
-#define HEIGHT 600
+#define WINDOW_TITLE "Langton's Ant"
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
-#define FPS_CAP 300
+#define FPS_CAP 30
 #define FRAME_DELAY (1000 / FPS_CAP)
 
 struct cell
@@ -43,54 +44,53 @@ struct rule
 
 int main(int argc, char *argv[])
 {
-    (void)argc;
-    (void)argv;
-
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_Window *window = SDL_CreateWindow(
-        "Langton's Ant",
+        WINDOW_TITLE,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        WIDTH,
-        HEIGHT,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
         0);
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
+    SDL_Renderer *renderer = SDL_CreateRenderer(
+        window,
+        -1,
+        SDL_RENDERER_SOFTWARE);
 
-    SDL_Texture *texture = SDL_CreateTexture(
+    SDL_Texture *screen = SDL_CreateTexture(
         renderer,
         SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING,
-        WIDTH,
-        HEIGHT);
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT);
 
-    unsigned int *pixels = malloc(WIDTH * HEIGHT * sizeof(unsigned int));
-    memset(pixels, 255, WIDTH * HEIGHT * sizeof(unsigned int));
+    unsigned int *pixels = malloc(WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(unsigned int));
 
     srand((unsigned int)time(NULL));
 
     bool step = true;
 
-    struct cell *cells = malloc(WIDTH * HEIGHT * sizeof(struct cell));
+    struct cell *cells = malloc(WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(struct cell));
     struct ant *ant = malloc(sizeof(struct ant));
     struct rule rules[] = {
         {0, 0, 0, false},
         {255, 255, 255, true}};
 
 start:
-    for (int x = 0; x < WIDTH; x++)
+    for (int x = 0; x < WINDOW_WIDTH; x++)
     {
-        for (int y = 0; y < HEIGHT; y++)
+        for (int y = 0; y < WINDOW_HEIGHT; y++)
         {
-            struct cell *cell = &cells[x + y * WIDTH];
+            struct cell *cell = &cells[x + y * WINDOW_WIDTH];
 
             cell->index = 0;
         }
     }
 
-    ant->x = WIDTH / 2;
-    ant->y = HEIGHT / 2;
+    ant->x = WINDOW_WIDTH / 2;
+    ant->y = WINDOW_HEIGHT / 2;
     ant->direction = DIRECTION_NORTH;
 
     bool running = true;
@@ -137,25 +137,25 @@ start:
         {
             if (ant->x < 0)
             {
-                ant->x = WIDTH + ant->x;
+                ant->x = WINDOW_WIDTH + ant->x;
             }
 
-            if (ant->x >= WIDTH)
+            if (ant->x >= WINDOW_WIDTH)
             {
-                ant->x = WIDTH - ant->x;
+                ant->x = WINDOW_WIDTH - ant->x;
             }
 
             if (ant->y < 0)
             {
-                ant->y = HEIGHT + ant->y;
+                ant->y = WINDOW_HEIGHT + ant->y;
             }
 
-            if (ant->y >= HEIGHT)
+            if (ant->y >= WINDOW_HEIGHT)
             {
-                ant->y = HEIGHT - ant->y;
+                ant->y = WINDOW_HEIGHT - ant->y;
             }
 
-            struct cell *cell = &cells[ant->x + ant->y * WIDTH];
+            struct cell *cell = &cells[ant->x + ant->y * WINDOW_WIDTH];
             struct rule *rule = &rules[cell->index];
 
             switch (ant->direction)
@@ -224,12 +224,12 @@ start:
             }
         }
 
-        for (int x = 0; x < WIDTH; x++)
+        for (int x = 0; x < WINDOW_WIDTH; x++)
         {
-            for (int y = 0; y < HEIGHT; y++)
+            for (int y = 0; y < WINDOW_HEIGHT; y++)
             {
-                unsigned int *pixel = &pixels[x + y * WIDTH];
-                struct cell *cell = &cells[x + y * WIDTH];
+                unsigned int *pixel = &pixels[x + y * WINDOW_WIDTH];
+                struct cell *cell = &cells[x + y * WINDOW_WIDTH];
                 struct rule *rule = &rules[cell->index];
 
                 int red = (*pixel >> 24) & 0xff;
@@ -254,13 +254,13 @@ start:
             }
         }
 
+        SDL_RenderClear(renderer);
         SDL_UpdateTexture(
-            texture,
+            screen,
             NULL,
             pixels,
-            WIDTH * sizeof(unsigned int));
-
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
+            WINDOW_WIDTH * sizeof(unsigned int));
+        SDL_RenderCopy(renderer, screen, NULL, NULL);
         SDL_RenderPresent(renderer);
 
         unsigned int frame_end = SDL_GetTicks();
@@ -277,7 +277,7 @@ start:
 
     free(pixels);
 
-    SDL_DestroyTexture(texture);
+    SDL_DestroyTexture(screen);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
