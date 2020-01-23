@@ -1,6 +1,6 @@
 CC := gcc
 CFLAGS := -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter `pkg-config --cflags sdl2`
-LDFLAGS := `pkg-config --libs sdl2`
+LDFLAGS := `pkg-config --libs sdl2` -mconsole
 
 SRC	:= src
 BUILD := build
