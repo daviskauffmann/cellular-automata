@@ -1,6 +1,6 @@
 CC := gcc
-CFLAGS := -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter
-LDFLAGS :=
+CFLAGS := -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter `pkg-config --cflags sdl2`
+LDFLAGS := `pkg-config --libs sdl2`
 
 SRC	:= src
 BUILD := build
@@ -8,7 +8,7 @@ BIN	:= bin
 
 INCLUDE :=
 LIB :=
-LIBRARIES := -lmingw32 -lSDL2main -lSDL2
+LIBRARIES :=
 
 .PHONY: all
 all: $(BIN)/ant $(BIN)/brain $(BIN)/empire $(BIN)/life $(BIN)/predator-and-prey $(BIN)/seeds

@@ -1,18 +1,27 @@
-# Undermountain
+# Cellular Automata
 
 ## Getting Started
 
-Make sure you have `SDL2` installed.
+### Dependencies
 
-Build all the projects.
+- SDL2
+
+### Download
+
+```sh
+git clone https://github.com/daviskauffmann/cellular-automata.git
+cd cellular-automata
+```
+
+### Build
 
 ```sh
 make
 ```
 
-Each automaton will be in `/bin` after building.
+You can then find each automaton in `/bin/`.
 
-Cleanup build files and binaries.
+### Cleanup
 
 ```sh
 make clean

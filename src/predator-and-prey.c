@@ -202,6 +202,8 @@ start:
 
                         switch (cell->type)
                         {
+                        case TYPE_EMPTY:
+                            break;
                         case TYPE_PREY:
                         {
                             cell->health++;
