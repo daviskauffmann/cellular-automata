@@ -1,28 +1,22 @@
 CC := gcc
 CFLAGS := -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter `pkg-config --cflags sdl2`
+CPPFLAGS :=
 LDFLAGS := `pkg-config --libs sdl2` -mconsole
-
-SRC	:= src
-BUILD := build
-BIN	:= bin
-
-INCLUDE :=
-LIB :=
-LIBRARIES :=
+LDLIBS :=
 
 .PHONY: all
-all: $(BIN)/ant $(BIN)/brain $(BIN)/empire $(BIN)/life $(BIN)/predator-and-prey $(BIN)/seeds
+all: bin/ant bin/brain bin/empire bin/life bin/predator-and-prey bin/seeds
 
-$(BIN)/%: $(BUILD)/%.o
+bin/%: build/%.o
 	mkdir -p $(@D)
-	$(CC) $^ -o $@ $(LDFLAGS) $(LIB) $(LIBRARIES)
+	$(CC) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
-$(BUILD)/%.o: $(SRC)/%.c
+build/%.o: src/%.c
 	mkdir -p $(@D)
-	$(CC) -c $< -o $@ -MMD -MF $(@:.o=.d) $(CFLAGS) $(INCLUDE)
+	$(CC) -c $< -o $@ -MMD -MF $(@:.o=.d) $(CFLAGS) $(CPPFLAGS)
 
--include $(DEPENDENCIES)
+-include $(DEP)
 
 .PHONY: clean
 clean:
-	rm -rf $(BIN) $(BUILD)
+	rm -rf bin build
