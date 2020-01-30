@@ -15,8 +15,6 @@ build/%.o: src/%.c
 	mkdir -p $(@D)
 	$(CC) -c $< -o $@ -MMD -MF $(@:.o=.d) $(CFLAGS) $(CPPFLAGS)
 
--include $(DEP)
-
 .PHONY: clean
 clean:
 	rm -rf bin build
