@@ -19,7 +19,7 @@ cd cellular-automata
 make
 ```
 
-You can then find each automaton in `/bin/`.
+You can then find each automaton in `bin`.
 
 ### Cleanup
 
