@@ -1,8 +1,10 @@
-CC := gcc
-CFLAGS := -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter `pkg-config --cflags sdl2`
-CPPFLAGS :=
-LDFLAGS := `pkg-config --libs sdl2` -mconsole
-LDLIBS :=
+PKGS = sdl2
+
+CC = gcc
+CFLAGS = -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter `pkg-config --cflags $(PKGS)`
+CPPFLAGS =
+LDFLAGS = `pkg-config --libs $(PKGS)` -mconsole
+LDLIBS =
 
 .PHONY: all
 all: bin/ant bin/brain bin/empire bin/life bin/predator-and-prey bin/seeds
