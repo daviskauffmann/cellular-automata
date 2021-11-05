@@ -11,9 +11,6 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-#define FPS_CAP 30
-#define FRAME_DELAY (1000 / FPS_CAP)
-
 #define HEALTH_START 100
 #define HEALTH_REPRODUCE 200
 
@@ -93,8 +90,6 @@ start:
     bool running = true;
     while (running)
     {
-        unsigned int frame_start = SDL_GetTicks();
-
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -287,18 +282,18 @@ start:
                 break;
                 case TYPE_PREY:
                 {
-                    red = 0;
-                    green = 255;
-                    blue = 0;
+                    red = 100;
+                    green = 200;
+                    blue = 100;
 
                     num_prey++;
                 }
                 break;
                 case TYPE_PREDATOR:
                 {
-                    red = 255;
-                    green = 0;
-                    blue = 0;
+                    red = 200;
+                    green = 100;
+                    blue = 100;
 
                     num_predators++;
                 }
@@ -321,14 +316,6 @@ start:
             WINDOW_WIDTH * sizeof(unsigned int));
         SDL_RenderCopy(renderer, screen, NULL, NULL);
         SDL_RenderPresent(renderer);
-
-        unsigned int frame_end = SDL_GetTicks();
-        unsigned int frame_time = frame_end - frame_start;
-
-        if (FRAME_DELAY > frame_time)
-        {
-            SDL_Delay(FRAME_DELAY - frame_time);
-        }
     }
 
     free(cells);

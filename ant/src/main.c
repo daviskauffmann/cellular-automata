@@ -11,9 +11,6 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-#define FPS_CAP 30
-#define FRAME_DELAY (1000 / FPS_CAP)
-
 struct cell
 {
     unsigned int index;
@@ -96,8 +93,6 @@ start:
     bool running = true;
     while (running)
     {
-        unsigned int frame_start = SDL_GetTicks();
-
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -262,14 +257,6 @@ start:
             WINDOW_WIDTH * sizeof(unsigned int));
         SDL_RenderCopy(renderer, screen, NULL, NULL);
         SDL_RenderPresent(renderer);
-
-        unsigned int frame_end = SDL_GetTicks();
-        unsigned int frame_time = frame_end - frame_start;
-
-        if (FRAME_DELAY > frame_time)
-        {
-            SDL_Delay(FRAME_DELAY - frame_time);
-        }
     }
 
     free(ant);
