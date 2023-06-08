@@ -1,6 +1,6 @@
+#include <SDL2/SDL.h>
 #include <malloc.h>
 #include <math.h>
-#include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +8,8 @@
 #include <time.h>
 
 #define WINDOW_TITLE "Predator & Prey"
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 
 #define HEALTH_START 100
 #define HEALTH_REPRODUCE 200
@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
     bool step = true;
 
     struct cell *cells = malloc(WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(struct cell));
+    struct cell *new_cells = malloc(WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(struct cell));
 
 start:
     for (int x = 0; x < WINDOW_WIDTH; x++)
@@ -127,6 +128,8 @@ start:
 
         if (step)
         {
+            memcpy(new_cells, cells, WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(struct cell));
+
             for (int x = 0; x < WINDOW_WIDTH; x++)
             {
                 for (int y = 0; y < WINDOW_HEIGHT; y++)

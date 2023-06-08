@@ -5,15 +5,9 @@
 ### Download
 
 ```sh
-git clone https://github.com/daviskauffmann/cellular-automata.git
+git clone --recurse-submodules https://github.com/daviskauffmann/cellular-automata.git
 cd cellular-automata
 ```
-
-### Install Dependencies
-
-Install the following using the package manager of your choice:
-
-- SDL2
 
 ### Build
 
